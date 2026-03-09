@@ -1,0 +1,17 @@
+# Ignore these directories
+Manuscripts/
+Data/
+
+# Ignore R history files
+*.Rhistory
+
+# Ignore various other file types
+*.txt
+*.rda
+*.pdf
+*.docx
+*.pptx
+*.svg
+*.names
+*.joblib
+*.pyc
