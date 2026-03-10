@@ -1,6 +1,8 @@
 # KangarooProject
 Understanding the movement of red kangaroos in the Australian desert as part of the PhD thesis of Jasmin Annett. In this repo: Loading in data from the Axivity boards, aligning with video footage, developing a machine learning behavioural classifier, and dead reckoning exact movement paths.
 
+![What this repo does](Notes/Figures/RepoOverview.png)
+
 ## Data
 Data collected by Jasmin Annett from red and western grey kangaroos at Fownler's Gap, NSW. Data will be made available after publication of the manuscript.
 
@@ -15,4 +17,4 @@ This code is a customised instantiation of that found in the [Impala project](ht
 Infomation and links to be filled in later...
 
 ## Contributions
-Ethics, permitting, and project management by Jasmin Annett. Collar design by Robin Maag, Chris Bird, and Jasmin Annett. Animal collaring by Jasmin Annett, David Blyde, Christofer Clemente, Robin Maag, and me. Data wrangling, processing, machine learning, and dead reckoning by me. Data annotation by Amelia Nelson.
+Ethics, permitting, and project design and management by Jasmin Annett. Collar design by Robin Maag, Chris Bird, and Jasmin Annett. Animal collaring by Jasmin Annett, David Blyde, Christofer Clemente, Robin Maag, and me. Data wrangling, processing, machine learning, and dead reckoning by me. Data annotation by Amelia Nelson.
