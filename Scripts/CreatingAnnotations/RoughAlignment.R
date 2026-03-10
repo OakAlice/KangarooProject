@@ -8,24 +8,26 @@
 # save results in an excel sheet - in this case I saved it to the RawData folder under Video_info.csv
 # Manulaly define the video and date you want to work on ------------------
 
-collar <- "Data/RawData/BigCahuna"
-
 accel_files <- list.files(file.path(collar, "ArtemisAlignedChunked"), full.names = TRUE, pattern = ".RDA")
 video_dir <- file.path(collar, "Videos")
 video_metadata <- fread(file.path(collar, "Video_metadata.csv"))
 
 videos <- list.files(video_dir, full.names = TRUE, recursive = TRUE, pattern = "\\.MP4$")
 # video number selection
-vid_number_in_list <- 4
+vid_number_in_list <- 3
 
 {
   video_name <- basename(videos[vid_number_in_list]) # "DJI_20240702082054_0038_D.MP4"
-  date <- as.POSIXct(basename(dirname(videos[vid_number_in_list])), format = "%d%m%Y", tz = "UTC") # "2024-07-02"
+  date <- as.POSIXct(basename(dirname(videos[vid_number_in_list])), format = "%d%m%Y", tz = "Australia/Brisbane") # "2024-07-02"
   
   # get the metadata
-  video_start <- video_metadata[filename == video_name, start_time]
+  video_start <- as.POSIXct(video_metadata[filename == video_name, start_time], tz = "Australia/Brisbane")
   video_duration <- video_metadata[filename == video_name, duration_sec]
   video_end <- video_start + seconds(video_duration)
+  
+  # now convert to UTC (which is what the accel boards are in)
+  video_start_UTC <- as.POSIXct(video_start, tz = "UTC")
+  video_end_UTC <- as.POSIXct(video_end, tz = "UTC")
   
   # Load in the data --------------------------------------------------------
   # Load in the relevant accelerometer
@@ -40,7 +42,7 @@ vid_number_in_list <- 4
 
 
 
-plot_segment_app(day_data, video_start, video_end, date)
+plot_segment_app(day_data, video_start_UTC, video_end_UTC, date)
 
 
 

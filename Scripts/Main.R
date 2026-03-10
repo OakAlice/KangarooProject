@@ -15,11 +15,26 @@ pacman::p_load(
 
 sample_rate <- 50
 
-# Read the data together  and aline the data sources ---------------------
-source("Scripts/ReadingData/CreatingAlignedData.R")
+# meaningful days
+sampling_times <- fread("Metadata/Sampling_Times.csv")
 
-# Extract sections relevant to each video ---------------------------------
-# get the metadata for each of the videos # for now just works with the drone data
-source("Scripts/CreatingAnnotations/ExtractingVideoMetadata.R")
-# now align with the videos roughly... this is quite manual
-source("Scripts/CreatingAnnotations/RoughAlignment.R")
+collars <- list.dirs("Data/RawData", recursive = FALSE) # all the ones we want to do
+for (collar in collars){
+  # Read the data together  and aline the data sources ------------------
+  source("Scripts/ReadingData/CreatingAlignedData.R")
+  
+  # delete the files that don't matter (outside of the sampling days of interest)
+  # sampling_start <- sampling_times %>% dplyr::filter(Name == basename(collar)) %>% mutate(Start = as.Date(Start)) %>% pull(Start)
+  # sampling_end <- sampling_times %>% dplyr::filter(Name == basename(collar)) %>% mutate(Start = as.Date(End)) %>% pull(Start)
+  # unnecesssary_files <- list.files(file.path(base_path, "Output"), pattern = "_3", full.names = TRUE, recursive = TRUE)
+  # file.remove(unnecesssary_files)
+  
+  # get the metadata for each of the videos -----------------------------
+  source("Scripts/CreatingAnnotations/ExtractingVideoMetadata.R")
+  
+  # now align with the videos roughly... this is quite manual -----------
+  # source("Scripts/CreatingAnnotations/RoughAlignment.R")
+  
+  # make the 
+
+}

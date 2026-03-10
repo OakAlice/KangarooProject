@@ -1,8 +1,8 @@
 # Extracting video metadata -----------------------------------------------
-collars <- list.dirs("Data/RawData", recursive = FALSE) # all the ones we want to do
 
-for (collar in collars){
-  
+if(file.exists(file.path(collar, "Video_metadata.csv"))){
+  print("metadata already extracted")
+} else {
   # Extracting video information
   videos_list <- list.files(file.path(collar, "Videos"), 
                             pattern = "MP4", 
@@ -22,7 +22,7 @@ for (collar in collars){
     if (grepl("DJI", filename)) {
       # strip the video time out of the name
       time_string <- str_split(filename, "_", simplify = TRUE)[2]
-      start_time <- as.POSIXct(time_string, format = "%Y%m%d%H%M%S", tz = "UTC")
+      start_time <- as.POSIXct(time_string, format = "%Y%m%d%H%M%S", tz = "Australia/Brisbane")
     } else {
       print("havent figured out time comnversion for non-DJI videos yet")
     }
