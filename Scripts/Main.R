@@ -7,18 +7,19 @@ pacman::p_load(
   tidyverse,
   data.table,
   zoo,
+  av,
+  stringr,
+  shiny,
   patchwork
 )
 
 sample_rate <- 50
 
-# Reading in the data -----------------------------------------------------
-# load in custom functions (helpers)
-
-
 # Read the data together  and aline the data sources ---------------------
 source("Scripts/ReadingData/CreatingAlignedData.R")
 
 # Extract sections relevant to each video ---------------------------------
-# for annotating
-
+# get the metadata for each of the videos # for now just works with the drone data
+source("Scripts/CreatingAnnotations/ExtractingVideoMetadata.R")
+# now align with the videos roughly... this is quite manual
+source("Scripts/CreatingAnnotations/RoughAlignment.R")
