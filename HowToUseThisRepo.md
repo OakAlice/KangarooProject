@@ -1,4 +1,4 @@
-This repo is very large and contains many different subsections of code and processing.
+This repo is very large and contains many different subsections of code and processing. It is a kangaroo customised instantiation of the same code found in the [Impala project](https://github.com/OakAlice/ImpalaProject/tree/main) but was written in tandem to this other repo. Much of this code was recycled/ammalgamated from prior projects such as [data wrangling and dead reckoning](https://github.com/OakAlice/IntegratedCollarAnalysis) and [machine learning behavioural classification](https://github.com/OakAlice/AniML/tree/main). 
 
 *Detailed instructions to be added later*
 
