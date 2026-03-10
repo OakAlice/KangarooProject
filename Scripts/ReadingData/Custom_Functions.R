@@ -147,6 +147,25 @@ combine_accel_GPS <- function(example_dir, accel_data, gps_data){
   # check the reset events
   if (max(accel_data$reset_events) != max(gps_data$reset_events)){
     print("stop, there's soemthing wrong - the devices have a different number of resets")
+    print("removing the short resets from the accelerometer dataset")
+    
+    min_dur <- sample_rate * 60 * 60 # minimum duration is 1 hour
+    
+    # keep only the reset events that exceed the minimyum duration
+    keep <- accel_data[, .I[.N >= min_dur], by = reset_events]$V1
+    accel_data <- accel_data[keep]
+    
+    # and now reset the reset count back to 
+    accel_data[, reset_events := .GRP - 1L, by = reset_events]
+    
+    # now check again
+    if (max(accel_data$reset_events) != max(gps_data$reset_events)){
+      print("stop, there's still soemthing wrong - the devices still have a different number of resets")
+      print("stop and manually figure this out")
+    } else {
+      print("devices now have matching number of resets")
+    }
+    
   } else {
     print("devices were reset the same number of times")
   }
@@ -187,7 +206,7 @@ combine_accel_GPS <- function(example_dir, accel_data, gps_data){
   
   # Should be the same as the number of GPS hits, check whether that's the case
   if (sum(accel_data$gps_flag) != nrow(gps_data)){
-    print("there is something funny going on... not all the GPS hits have a match")
+    print("there is something funny going on... not all the GPS hits have a match...")
   }
 
   # arrange by the reset_events and then the rtc_datetime 
