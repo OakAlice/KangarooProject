@@ -112,7 +112,6 @@ if(!file.exists(file.path(chunked_dir_path, paste0("Board_Aligned_", unique(acce
   # Save each day to a separate RDA file in the chunked folder
   lapply(names(data_list), function(d) {
     day_data <- data_list[[d]]
-    fwrite(day_data, file = file.path(chunked_dir_path, paste0("Board_Aligned_", d, ".csv")))
     save(day_data, file = file.path(chunked_dir_path, paste0("Board_Aligned_", d, ".RDA")))
   })
 } else {

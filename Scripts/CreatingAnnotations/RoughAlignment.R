@@ -14,14 +14,15 @@ video_metadata <- fread(file.path(collar, "Video_metadata.csv"))
 
 videos <- list.files(video_dir, full.names = TRUE, recursive = TRUE, pattern = "\\.MP4$")
 # video number selection
-vid_number_in_list <- 3
+vid_number_in_list <- 23
 
 {
   video_name <- basename(videos[vid_number_in_list]) # "DJI_20240702082054_0038_D.MP4"
-  date <- as.POSIXct(basename(dirname(videos[vid_number_in_list])), format = "%d%m%Y", tz = "Australia/Brisbane") # "2024-07-02"
   
-  # get the metadata
-  video_start <- as.POSIXct(video_metadata[filename == video_name, start_time], tz = "Australia/Brisbane")
+  # get the times
+  video_start <- as.POSIXct(
+    str_split(video_name, "_", simplify = TRUE)[2], 
+    format = "%Y%m%d%H%M%S", tz = "Australia/Sydney") ## Note timezone where the data was collected
   video_duration <- video_metadata[filename == video_name, duration_sec]
   video_end <- video_start + seconds(video_duration)
   
@@ -30,7 +31,8 @@ vid_number_in_list <- 3
   video_end_UTC <- as.POSIXct(video_end, tz = "UTC")
   
   # Load in the data --------------------------------------------------------
-  # Load in the relevant accelerometer
+  # Load in the relevant accelerometer]
+  date <- as.Date(video_start)
   load(accel_files[grep(date, accel_files)]) # comes in as day_data
   if (!inherits(day_data$gps_time_est, "POSIXct")) {
     day_data$gps_time_est <- as.POSIXct(day_data$gps_time_est, tz="UTC")
@@ -38,14 +40,8 @@ vid_number_in_list <- 3
   setDT(day_data)
 }
 
-
-
-
-
-plot_segment_app(day_data, video_start_UTC, video_end_UTC, date)
-
-
-
+# make sure everything is in UTC
+plot_segment_app(day_data, video_start_UTC, video_end_UTC, date, save_dir = collar)
 
 
 # Set the variables -----------------------------------------------------------
@@ -55,10 +51,10 @@ plot_segment_app(day_data, video_start_UTC, video_end_UTC, date)
 # this little shiny app allows you to scroll up to a minute in either direction to find the match
 # watch the video and try to align it.
 # when you determine the delay, save that number.
-plot_segment_app <- function(day_data, video_start, video_end, date, x = 5) {
+plot_segment_app <- function(day_data, video_start, video_end, date, x = 5, save_dir) {
   ui <- fluidPage(
     sliderInput("delay", "Drone delay (seconds):",
-                min = -120, max = 120, value = 0, step = 1),
+                min = -240, max = 240, value = 0, step = 1),
     actionButton("save", "Save clipped accel segment"),
     plotOutput("accelPlot")
   )
@@ -66,15 +62,13 @@ plot_segment_app <- function(day_data, video_start, video_end, date, x = 5) {
     # reactive expression to compute accel_segment based on current delay
     accel_segment_reactive <- reactive({
       Drone_delay <- input$delay
-      video_start_local <- video_start + seconds(Drone_delay)
-      video_end_local   <- video_end + seconds(Drone_delay)
-      video_start_utc <- with_tz(video_start_local, "UTC")
-      video_end_utc   <- with_tz(video_end_local, "UTC")
-      accel_segment <- day_data[gps_time_est >= video_start_utc & gps_time_est <= video_end_utc]
+      video_start_updated <- video_start + seconds(Drone_delay)
+      video_end_updated   <- video_end + seconds(Drone_delay)
+      accel_segment <- day_data[gps_time_est >= video_start_updated & gps_time_est <= video_end_updated]
       accel_segment[, X := RawAX / 8192]
       accel_segment[, Y := RawAY / 8192]
       accel_segment[, Z := RawAZ / 8192]
-      accel_segment[, t_sec := as.numeric(gps_time_est - video_start_utc)]
+      accel_segment[, t_sec := as.numeric(gps_time_est - video_start_updated)]
       accel_segment[, t_minsec := sprintf("%d:%02d",
                                           as.integer(t_sec %/% 60),   # minutes
                                           as.integer(t_sec %% 60))]   # seconds
@@ -107,7 +101,7 @@ plot_segment_app <- function(day_data, video_start, video_end, date, x = 5) {
       accel_segment[, time_matlab := as.numeric(gps_time_est) / 86400 + matlab_origin]
       out <- accel_segment[, .(time_matlab, X, Y, Z)]
       # make the directory
-      clipped_dir_path <- file.path(accel_dir, "Clipped")
+      clipped_dir_path <- file.path(save_dir, "Clipped")
       if (!dir.exists(clipped_dir_path)) {
         dir.create(clipped_dir_path, recursive = TRUE)
       }
