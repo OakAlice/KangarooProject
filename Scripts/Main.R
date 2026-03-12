@@ -16,6 +16,8 @@ pacman::p_load(
 
 sample_rate <- 50
 
+source("Scripts/Plotting_Functions.R")
+
 # meaningful days
 sampling_times <- fread("Metadata/Sampling_Times.csv") %>%
   mutate(StartDate = as.Date(as.character(CollarDate), format = "%Y%m%d"),
@@ -23,6 +25,22 @@ sampling_times <- fread("Metadata/Sampling_Times.csv") %>%
 
 collars <- list.dirs("Data/RawData", recursive = FALSE) # all the ones we want to do
 for (collar in collars){
+
+  # Reading the data together -----------------------------------------------
+  source("Scripts/ReadingData/ReadingArtemisData.R")
+  
+  
+} 
+  # Data cleaning and bug report --------------------------------------
+  # Visualising the data directly ( for eyeballing purposes)
+  source("Scripts/ReadingData/VisualisingRawTraces.R")
+  # debug statements helping us find error and clean the data
+  source("Scripts/ReadingData/DegugReport.R")
+  
+  # Check the debug reports and ensure that there are no major issues not accounted for
+  # The following code is used to account for and fix these issues in the kangaroo data
+  source("Scripts/ReadingData/CleanData.R")
+  
   # Read the data together  and aline the data sources ------------------
   source("Scripts/ReadingData/CreatingAlignedData.R")
   
@@ -33,13 +51,6 @@ for (collar in collars){
   file_dates <- as.Date(stringr::str_extract(all_files, "\\d{4}-\\d{2}-\\d{2}"))
   selected_files <- all_files[file_dates >= start_date & file_dates <= end_date]
   file.remove(setdiff(all_files, selected_files))
-  
-  # Data cleaning -------------------------------------------------------
-  # Visualising the data directly ( for eyeballing purposes)
-  source("Scripts/ReadingData/VisualisingRawTraces.R")
-  
-  
-  
   
   
   # get the metadata for each of the videos -----------------------------
