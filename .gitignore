@@ -2,6 +2,9 @@
 Manuscripts/
 Data/
 
+# ignore the api key for google maps
+Api_key.R
+
 # Ignore R history files
 *.Rhistory
 

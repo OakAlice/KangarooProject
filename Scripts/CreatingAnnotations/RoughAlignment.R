@@ -14,7 +14,7 @@ video_metadata <- fread(file.path(collar, "Video_metadata.csv"))
 
 videos <- list.files(video_dir, full.names = TRUE, recursive = TRUE, pattern = "\\.MP4$")
 # video number selection
-vid_number_in_list <- 23
+vid_number_in_list <- 3
 
 {
   video_name <- basename(videos[vid_number_in_list]) # "DJI_20240702082054_0038_D.MP4"
@@ -34,8 +34,8 @@ vid_number_in_list <- 23
   # Load in the relevant accelerometer]
   date <- as.Date(video_start)
   load(accel_files[grep(date, accel_files)]) # comes in as day_data
-  if (!inherits(day_data$gps_time_est, "POSIXct")) {
-    day_data$gps_time_est <- as.POSIXct(day_data$gps_time_est, tz="UTC")
+  if (!inherits(day_data$updated_accel_time, "POSIXct")) {
+    day_data$gps_time_est <- as.POSIXct(day_data$updated_accel_time, tz="UTC")
   }
   setDT(day_data)
 }
@@ -64,11 +64,11 @@ plot_segment_app <- function(day_data, video_start, video_end, date, x = 5, save
       Drone_delay <- input$delay
       video_start_updated <- video_start + seconds(Drone_delay)
       video_end_updated   <- video_end + seconds(Drone_delay)
-      accel_segment <- day_data[gps_time_est >= video_start_updated & gps_time_est <= video_end_updated]
+      accel_segment <- day_data[updated_accel_time >= video_start_updated & updated_accel_time <= video_end_updated]
       accel_segment[, X := RawAX / 8192]
       accel_segment[, Y := RawAY / 8192]
       accel_segment[, Z := RawAZ / 8192]
-      accel_segment[, t_sec := as.numeric(gps_time_est - video_start_updated)]
+      accel_segment[, t_sec := as.numeric(updated_accel_time - video_start_updated)]
       accel_segment[, t_minsec := sprintf("%d:%02d",
                                           as.integer(t_sec %/% 60),   # minutes
                                           as.integer(t_sec %% 60))]   # seconds

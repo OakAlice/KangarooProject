@@ -140,10 +140,6 @@ combine_accel_GPS <- function(example_dir, accel_data, gps_data){
   setDT(accel_data)
   setDT(gps_data)
   
-  # convert the times to POSIXct again (just in case) # set them all to UTC
-  gps_data[, internal_timestamp := as.POSIXct(internal_timestamp, tz = "UTC")]
-  gps_data[, gps_timestamp := as.POSIXct(gps_timestamp, tz = "UTC")]
-  
   # check the reset events
   if (max(accel_data$reset_events) != max(gps_data$reset_events)){
     print("stop, there's soemthing wrong - the devices have a different number of resets")
@@ -171,100 +167,52 @@ combine_accel_GPS <- function(example_dir, accel_data, gps_data){
   }
   
   # Match timestamps in the accelerometer and GPS ---------------------------
-  setkey(accel_data, reset_events, rtc_datetime)
-  setkey(gps_data, reset_events, internal_timestamp)
+  setkey(accel_data, reset_events, updated_accel_sec)
+  setkey(gps_data, reset_events, gps_sec)
   
   # check whether there are matches and print if there arent # debugging step
-  bounds <- range(accel_data$rtc_datetime, na.rm = TRUE)
+  bounds <- range(accel_data$updated_accel_sec, na.rm = TRUE)
   
   any_in_range <- any(
-    gps_data$internal_timestamp >= bounds[1] &
-      gps_data$internal_timestamp <= bounds[2],
+    gps_data$gps_sec >= bounds[1] &
+      gps_data$gps_sec <= bounds[2],
     na.rm = TRUE
   )
   
-  if (any_in_range){
-    accel_data[, gps_flag := FALSE]
-    accel_data[
-      gps_data,
-      on = .(
-        reset_events, # ensure that only matches within the reset event
-        rtc_datetime = internal_timestamp
-      ),
-      roll = "nearest",
-      mult = "first",
-      `:=`(
-        gps_timestamp = i.gps_timestamp,
-        gps_lon       = i.lon,
-        gps_lat       = i.lat,
-        gps_flag      = TRUE
-      )
-    ]
+  if (any_in_range) {
+    
+    gps_data[, gps_row_id := .I]
+    
+    # find the single closest accel row to each GPS point
+    closest_idx <- accel_data[gps_data,
+                              on = .(reset_events, updated_accel_sec = gps_sec),
+                              roll = "nearest",
+                              which = TRUE]
+    
+    accel_matched <- copy(accel_data)
+    accel_matched[, gps_row_id := NA_integer_]
+    accel_matched[closest_idx, gps_row_id := gps_data$gps_row_id]
+    
+    result <- gps_data[accel_matched,
+                       on = .(reset_events, gps_row_id)]
+    
   } else {
-    print("these dont match or they dont overlap")
+    print("GPS and accel data do not overlap in times")
   }
   
   # Should be the same as the number of GPS hits, check whether that's the case
-  if (sum(accel_data$gps_flag) != nrow(gps_data)){
+  if (length(na.omit(result$lon)) != nrow(gps_data)){
     print("there is something funny going on... not all the GPS hits have a match...")
   }
 
-  # arrange by the reset_events and then the rtc_datetime 
-  setorder(accel_data, reset_events, rtc_datetime)
-  
-  # Convert GPS times to numeric seconds
-  accel_data[, gps_time_sec := as.numeric(gps_timestamp)]
-  # Interpolate GPS times linearly
-  accel_data[, gps_time_est_sec := na.approx(gps_time_sec, na.rm = FALSE)]
-  
-  ##NOTE: However, because of the multiple reset, the times prior to the first clean hit will be wrong
-  # We can't just delete these times because often the calibration event will be occuring in this window
-  # Therefore, a bit of messy math...
-  
-  # set the correct order
-  setorder(accel_data, reset_events, rtc_datetime)
-  
-  # get the sample rate moving forward after the first genuine hit
-  accel_data[, dt_est := {
-    
-    first_idx <- which(!is.na(gps_timestamp))[1]
-
-    valid_after <- gps_time_est_sec[first_idx:.N]
-    if (length(valid_after) > 1)
-      mean(diff(valid_after[1:min(1000, length(valid_after))]))
-    else
-      NA_real_
-    
-  }, by = reset_events]
-  
-  # find the first genione time
-  accel_data[, first_idx := which(!is.na(gps_timestamp))[1],
-    by = reset_events]
-  
-  # back proagate from that first valid hit to the beginning of the day
-  accel_data[first_idx > 1 & !is.na(dt_est),
-    gps_time_est_sec := {
-      
-      x <- gps_time_est_sec
-      fi <- first_idx[1]
-      dt <- dt_est[1]
-      
-      # cumulative backward offsets
-      offsets <- rev(cumsum(rep(dt, fi - 1)))
-      
-      x[1:(fi - 1)] <- x[fi] - offsets
-      x
-      
-    },
-    by = reset_events]
-  
   # Convert back to POSIXct
-  accel_data[, gps_time_est := as.POSIXct(gps_time_est_sec, origin = "1970-01-01", tz = "UTC")]
-  # clean
-  accel_data[, c("gps_time_sec", "gps_time_est_sec", "first_idx", "dt_est") := NULL]
+  result[, updated_accel_time := as.POSIXct(updated_accel_sec, tz = "UTC")]
+  
+  # clean thw whole thing up
+  result[, c("gps_diff", "internal_diff", "gps_sec", "gps_row_id", "updated_accel_sec") := NULL]
 
   # return it. Though warning, this can be massive
-  return(accel_data)
+  return(result)
 }
 
 # Looking for time skips in the GPS data ----------------------------------

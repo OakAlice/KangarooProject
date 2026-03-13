@@ -32,9 +32,9 @@ setDT(accel_data)[, `:=`(
   internal_diff = as.numeric(rtc_datetime  - shift(rtc_datetime), units = "secs")
 )]
 
-maxincaccel <- max(play_data$internal_diff, na.rm = TRUE)
-meanincaccel <- mean(play_data$internal_diff, na.rm = TRUE)
-minincaccel <- min(play_data$internal_diff, na.rm = TRUE)
+maxincaccel <- max(accel_data$internal_diff, na.rm = TRUE)
+meanincaccel <- mean(accel_data$internal_diff, na.rm = TRUE)
+minincaccel <- min(accel_data$internal_diff, na.rm = TRUE)
 
 ## GPS --------------------------------------------------------------------
 setDT(gps_data)[, `:=`(

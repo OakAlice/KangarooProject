@@ -35,11 +35,7 @@ for (collar in collars){
   # Visualising the data directly ( for eyeballing purposes)
   source("Scripts/ReadingData/VisualisingRawTraces.R")
   # debug statements helping us find error and clean the data
-  source("Scripts/ReadingData/DegugReport.R")
-  
-  # Check the debug reports and ensure that there are no major issues not accounted for
-  # The following code is used to account for and fix these issues in the kangaroo data
-  source("Scripts/ReadingData/CleanData.R")
+  # source("Scripts/ReadingData/DegugReport.R")
   
   # Read the data together  and aline the data sources ------------------
   source("Scripts/ReadingData/CreatingAlignedData.R")
